@@ -248,3 +248,47 @@ Status: ![CI](https://img.shields.io/github/actions/workflow/status/rhymebulbul/
 ## License
 
 MIT
+
+---
+
+## Observability
+
+### Structured Logging (structlog)
+
+ARC uses [structlog](https://www.structlog.org/) throughout — every log event carries typed key-value context rather than unstructured strings, making logs machine-parseable by any aggregator (Datadog, Splunk, CloudWatch).
+
+**Development (default):** human-readable coloured console output
+```
+2026-08-30T18:40:01Z [info     ] tool.invoke     tool=class_methods args=['file_path', 'class_name']
+2026-08-30T18:40:01Z [info     ] tool.result     tool=class_methods output_length=87
+2026-08-30T18:40:02Z [info     ] hitl.interrupt  patches_drafted=1 errors=0
+2026-08-30T18:40:05Z [info     ] hitl.approved   feedback=None
+2026-08-30T18:40:05Z [info     ] arc.complete    status=approved iterations=4
+```
+
+**Production (JSON):** newline-delimited JSON via `LOG_FORMAT=json`
+```json
+{"timestamp": "2026-08-30T18:40:01Z", "level": "info", "event": "tool.invoke", "tool": "class_methods", "args": ["file_path", "class_name"]}
+{"timestamp": "2026-08-30T18:40:02Z", "level": "info", "event": "hitl.interrupt", "patches_drafted": 1, "errors": 0}
+```
+
+```bash
+# Run with JSON logs (production mode)
+LOG_FORMAT=json LOG_LEVEL=DEBUG make run ISSUE="..."
+```
+
+### LangSmith Tracing
+
+When `LANGCHAIN_API_KEY` is set, ARC automatically enables [LangSmith](https://smith.langchain.com/) distributed tracing — zero code changes required. Every LLM call, tool invocation, latency, token count, and error is captured and visible in the LangSmith dashboard.
+
+```bash
+LANGCHAIN_API_KEY=lsv2_... LANGCHAIN_PROJECT=arc-prod make run ISSUE="..."
+```
+
+What gets traced automatically:
+- Every LLM `invoke` / `ainvoke` with full prompt + response
+- Each tool call with inputs, output, and latency
+- The LangGraph state machine node transitions
+- Token usage and cost per run
+
+LangSmith tracing is **opt-in and zero-overhead when absent** — if `LANGCHAIN_API_KEY` is not set, ARC runs normally with no tracing overhead.

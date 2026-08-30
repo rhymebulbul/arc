@@ -9,15 +9,15 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
-import logging
 import os
 import sys
 from pathlib import Path
 import contextlib
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 from pydantic import BaseModel, Field, create_model
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Attempt to import standard MCP SDK
 try:

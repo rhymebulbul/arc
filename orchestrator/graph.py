@@ -4,11 +4,11 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-import logging
+import structlog
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 from .state import (
     AgentState,
@@ -291,7 +291,10 @@ def reasoner_node(state: AgentState, llm_with_tools: Optional[Any] = None) -> Di
     iter_count = state.get("iteration_count", 0)
     max_iters = state.get("max_iterations", 10)
 
+    logger.debug("reasoner.enter", iteration=iter_count, max_iterations=max_iters, message_count=len(messages))
+
     if max_iters is not None and iter_count >= max_iters:
+        logger.warning("reasoner.max_iterations_reached", iteration=iter_count, max_iterations=max_iters)
         return {
             "iteration_count": iter_count,
             "status": "max_iterations_reached",
@@ -364,6 +367,7 @@ async def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = No
             new_errors.append(output)
         else:
             try:
+                logger.info("tool.invoke", tool=t_name, args=list(t_args.keys()))
                 if hasattr(tool_instance, "ainvoke"):
                     output = await tool_instance.ainvoke(t_args)
                 elif hasattr(tool_instance, "invoke"):
@@ -372,8 +376,10 @@ async def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = No
                     output = tool_instance(**t_args)
                 else:
                     output = f"Error: Tool '{t_name}' is not invocable."
+                logger.info("tool.result", tool=t_name, output_length=len(str(output) if output else ""))
             except Exception as e:
                 output = f"Error executing tool '{t_name}': {str(e)}"
+                logger.error("tool.exception", tool=t_name, error=str(e))
                 new_errors.append(output)
 
         out_str = str(output) if output is not None else ""
@@ -410,6 +416,8 @@ async def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = No
 def hitl_gate_node(state: AgentState, resume_val: Optional[Any] = None) -> Dict[str, Any]:
     """Human-in-the-loop governance breakpoint node."""
     if resume_val is None:
+        patch_count = len(state.get("patch_history", []))
+        logger.info("hitl.interrupt", patches_drafted=patch_count, errors=len(state.get("error_history", [])))
         interrupt_payload = {
             "action": "human_approval_required",
             "patch_history": state.get("patch_history", []),
@@ -437,12 +445,14 @@ def hitl_gate_node(state: AgentState, resume_val: Optional[Any] = None) -> Dict[
             feedback = resume_val
 
     if approved:
+        logger.info("hitl.approved", feedback=feedback or None)
         return {
             "hitl_approved": True,
             "status": "approved",
             "messages": [AIMessage(content="[HITL Governance] Patch changes approved by human operator. Finalizing.")],
         }
     else:
+        logger.warning("hitl.rejected", feedback=feedback)
         return {
             "hitl_approved": False,
             "status": "reasoning",
