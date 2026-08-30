@@ -23,10 +23,19 @@ def get_or_create_container():
         except docker.errors.NotFound:
             pass
 
+    # Calculate repo root relative to this file
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
     current_container = client.containers.run(
         "python:3.12-slim",
         command="sleep infinity",
         detach=True,
+        volumes={
+            repo_root: {
+                "bind": WORKSPACE_DIR,
+                "mode": "rw"
+            }
+        },
         working_dir=WORKSPACE_DIR,
         auto_remove=True
     )
