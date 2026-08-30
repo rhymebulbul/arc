@@ -278,13 +278,6 @@ class OpenRouterModelRouter:
         }
         merged_kwargs.update(kwargs)
         chat = ChatOpenAI(**merged_kwargs)
-        # Ensure base_url/openai_api_base attributes exist
-        if not hasattr(chat, "base_url"):
-            chat.base_url = self.base_url
-        if not hasattr(chat, "openai_api_base"):
-            chat.openai_api_base = self.base_url
-        if not hasattr(chat, "model_name"):
-            chat.model_name = chosen_model
         return chat
 
 

@@ -3,7 +3,7 @@ import asyncio
 from pathlib import Path
 
 # Add project root to path so we can import orchestrator
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from orchestrator.mcp_client import MCPClientManager, get_default_mcp_server_params
 from orchestrator.llm import create_openrouter_llm
@@ -16,7 +16,7 @@ async def main(issue_description: str):
     
     # 1. Connect to local MCP Servers (AST + Sandbox)
     print("🔌 Connecting to local MCP servers (AST & Sandbox)...")
-    repo_root = str(Path(__file__).resolve().parent.parent)
+    repo_root = str(Path(__file__).resolve().parent)
     server_configs = get_default_mcp_server_params(repo_root=repo_root)
     manager = MCPClientManager(server_configs=server_configs)
     
