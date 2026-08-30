@@ -343,7 +343,7 @@ def reasoner_node(state: AgentState, llm_with_tools: Optional[Any] = None) -> Di
     return updates
 
 
-def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Tools node executing tool calls and updating patch and error histories."""
     messages = state.get("messages", [])
     if not messages:
@@ -370,7 +370,9 @@ def tools_node(state: AgentState, tools_map: Optional[Dict[str, Any]] = None) ->
             new_errors.append(output)
         else:
             try:
-                if hasattr(tool_instance, "invoke"):
+                if hasattr(tool_instance, "ainvoke"):
+                    output = await tool_instance.ainvoke(t_args)
+                elif hasattr(tool_instance, "invoke"):
                     output = tool_instance.invoke(t_args)
                 elif callable(tool_instance):
                     output = tool_instance(**t_args)
@@ -474,8 +476,8 @@ def create_orchestrator_graph(
     def _reasoner(state: AgentState) -> Dict[str, Any]:
         return reasoner_node(state, llm_with_tools=llm_with_tools)
 
-    def _tools(state: AgentState) -> Dict[str, Any]:
-        return tools_node(state, tools_map=tools_map)
+    async def _tools(state: AgentState) -> Dict[str, Any]:
+        return await tools_node(state, tools_map=tools_map)
 
     def _hitl(state: AgentState, resume_val: Optional[Any] = None) -> Dict[str, Any]:
         return hitl_gate_node(state, resume_val=resume_val)
