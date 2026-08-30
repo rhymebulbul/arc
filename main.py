@@ -30,7 +30,7 @@ async def main(issue_description: str):
 
     # 2. Setup LLM
     print("🧠 Initializing OpenRouter LLM...")
-    llm = create_openrouter_llm(model_name="openai/gpt-4o")
+    llm = create_openrouter_llm(model_name="openrouter/free")
 
     # 3. Compile LangGraph
     print("🕸️ Compiling ReAct State Machine with HITL governance...")
