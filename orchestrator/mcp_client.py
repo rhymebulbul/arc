@@ -13,6 +13,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+import contextlib
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 from pydantic import BaseModel, Field, create_model
 
@@ -246,7 +247,7 @@ class MCPClientManager:
         self.server_configs: Dict[str, Any] = server_configs or {}
         self.direct_servers: Dict[str, Any] = {}
         self.sessions: Dict[str, Any] = {}
-        self._exit_stack_contexts: List[Any] = []
+        self.exit_stack = contextlib.AsyncExitStack()
         self._discovered_tools: Dict[str, Dict[str, Any]] = {}
         self._tool_to_server: Dict[str, str] = {}
 
@@ -294,13 +295,12 @@ class MCPClientManager:
 
                     if server_params is not None:
                         stdio_transport = stdio_client(server_params)
-                        read, write = await stdio_transport.__aenter__()
+                        read, write = await self.exit_stack.enter_async_context(stdio_transport)
                         session = ClientSession(read, write)
-                        await session.__aenter__()
+                        await self.exit_stack.enter_async_context(session)
                         await session.initialize()
                         self.sessions[name] = {
                             "session": session,
-                            "transport": stdio_transport,
                         }
                 except Exception as e:
                     logger.debug(f"Stdio connection to MCP server '{name}' skipped or failed: {e}")
@@ -505,14 +505,10 @@ class MCPClientManager:
 
     async def close(self) -> None:
         """Closes all active sessions and transports cleanly."""
-        for name, session_entry in list(self.sessions.items()):
-            try:
-                session = session_entry["session"]
-                await session.__aexit__(None, None, None)
-                transport = session_entry["transport"]
-                await transport.__aexit__(None, None, None)
-            except Exception as e:
-                logger.debug(f"Exception during session close for {name}: {e}")
+        try:
+            await self.exit_stack.aclose()
+        except Exception as e:
+            logger.debug(f"Exception during close: {e}")
         self.sessions.clear()
 
     async def __aenter__(self) -> MCPClientManager:
