@@ -98,13 +98,7 @@ class OrchestratorCompiledGraph:
         config: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Invokes the graph synchronously until completion or HITL interrupt."""
-        if self.native_compiled is not None and LANGGRAPH_NATIVE:
-            try:
-                return self.native_compiled.invoke(input_data, config=config)
-            except Exception as e:
-                print(f"!!! NATIVE EXCEPTION: {e}")
-
-        return self._run_engine(input_data, config)
+        return run_coro_sync(self.ainvoke(input_data, config=config))
 
     async def ainvoke(
         self,
@@ -488,9 +482,11 @@ def create_orchestrator_graph(
             curr_status = "completed"
         elif curr_status not in ("max_iterations_reached", "failed", "approved"):
             curr_status = "completed"
+        new_memory = state.get("memory", {}).copy()
+        new_memory["status"] = curr_status
         return {
             "status": curr_status,
-            "memory": {"status": curr_status},
+            "memory": new_memory,
         }
 
     # Conditional Routing

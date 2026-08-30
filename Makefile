@@ -13,7 +13,7 @@ install:
 	$(PIP) install -r rag_layer/requirements.txt
 
 test:
-	PYTHONPATH=.:mcp_ast_server:mcp_sandbox_server:rag_layer $(PYTEST) orchestrator/tests/ mcp_ast_server/tests/ mcp_sandbox_server/tests/ rag_layer/tests/ -v
+	PYTHONPATH=.:mcp_ast_server:mcp_sandbox_server:rag_layer $(PYTEST) --import-mode=importlib orchestrator/tests/ mcp_ast_server/tests/ mcp_sandbox_server/tests/ rag_layer/tests/ -v
 
 run:
 	@if [ -z "$(ISSUE)" ]; then echo "Usage: make run ISSUE='Fix the null pointer bug'"; exit 1; fi

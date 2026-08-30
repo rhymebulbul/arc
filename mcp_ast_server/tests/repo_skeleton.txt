@@ -11,3 +11,4 @@ File: dummy_code.py
   Function: process_payment
   Function: refund_payment
   Function: calculate_tax
+  Function: test_refund_payment_returns_true
