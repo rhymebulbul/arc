@@ -46,19 +46,32 @@ async def main(issue_description: str):
     state_input = {"messages": [HumanMessage(content=issue_description)]}
 
     try:
-        # Run graph until completion or HITL
-        event = await app.ainvoke(state_input, config=config)
-        messages = event.get("messages", [])
-        if messages:
-            for msg in messages:
-                if msg.type == "ai":
-                    if msg.content:
-                        print(f"\n🤖 AI: {msg.content}")
-                    if hasattr(msg, "tool_calls") and msg.tool_calls:
-                        for call in msg.tool_calls:
-                            print(f"\n🤖 AI called tool: {call.get('name')}...")
-                elif msg.type == "tool":
-                    print(f"🛠️  Tool '{msg.name}' completed.")
+        if hasattr(app, "native_compiled") and app.native_compiled:
+            async for event in app.native_compiled.astream(state_input, config=config, stream_mode="values"):
+                messages = event.get("messages", [])
+                if messages:
+                    msg = messages[-1]
+                    if msg.type == "ai":
+                        if msg.content:
+                            print(f"\n🤖 AI: {msg.content}")
+                        if hasattr(msg, "tool_calls") and msg.tool_calls:
+                            for call in msg.tool_calls:
+                                print(f"\n🤖 AI called tool: {call.get('name')}...")
+                    elif msg.type == "tool":
+                        print(f"🛠️  Tool '{msg.name}' completed.")
+        else:
+            event = await app.ainvoke(state_input, config=config)
+            messages = event.get("messages", [])
+            if messages:
+                for msg in messages:
+                    if msg.type == "ai":
+                        if msg.content:
+                            print(f"\n🤖 AI: {msg.content}")
+                        if hasattr(msg, "tool_calls") and msg.tool_calls:
+                            for call in msg.tool_calls:
+                                print(f"\n🤖 AI called tool: {call.get('name')}...")
+                    elif msg.type == "tool":
+                        print(f"🛠️  Tool '{msg.name}' completed.")
                     
         # Check if we hit the interrupt
         state = app.get_state(config)
