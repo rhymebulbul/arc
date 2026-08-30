@@ -1,0 +1,5 @@
+mcp
+fastmcp
+tree-sitter
+tree-sitter-python
+pytest
