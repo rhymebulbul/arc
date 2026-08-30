@@ -102,7 +102,7 @@ class OrchestratorCompiledGraph:
             try:
                 return self.native_compiled.invoke(input_data, config=config)
             except Exception as e:
-                logger.debug(f"Native LangGraph invoke exception: {e}; falling back to internal graph engine.")
+                print(f"!!! NATIVE EXCEPTION: {e}")
 
         return self._run_engine(input_data, config)
 
