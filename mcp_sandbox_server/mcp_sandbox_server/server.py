@@ -25,4 +25,4 @@ def reset_environment() -> str:
     return reset_sandbox()
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(show_banner=False)
