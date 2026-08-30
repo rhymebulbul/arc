@@ -4,6 +4,8 @@
 [![MCP Native](https://img.shields.io/badge/Protocol-MCP-purple.svg)](https://modelcontextprotocol.io/)
 [![Status](https://img.shields.io/badge/Status-Active_Development-success.svg)]()
 
+![ARC Orchestrator Run](assets/arc_demo_run.png)
+
 ARC is an enterprise-grade, multi-agent CI/CD resolver designed to autonomously address GitHub issues and pipeline failures end-to-end. 
 
 Built for the late-2026 AI ecosystem, ARC moves beyond naive Vector RAG by leveraging **Native Prompt Caching** and deterministic **Tree-sitter AST extraction**. It strictly governs code generation through **Human-in-the-Loop (HITL)** state machines and executes patches in ephemeral Docker sandboxes.
