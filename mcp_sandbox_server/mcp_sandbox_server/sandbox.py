@@ -57,7 +57,7 @@ def apply_patch(file_path: str, patch_content: str) -> str:
     container = get_or_create_container()
     b64_content = base64.b64encode(patch_content.encode('utf-8')).decode('utf-8')
     # Using base64 to avoid quoting nightmares in bash
-    cmd = f"echo {b64_content} | base64 -d > {file_path}"
+    cmd = f"echo {b64_content} | base64 -d > '{file_path}'"
     return execute_command(cmd)
 
 def reset_sandbox() -> str:
