@@ -30,7 +30,7 @@ async def main(issue_description: str):
 
     # 2. Setup LLM
     print("🧠 Initializing OpenRouter LLM...")
-    llm = create_openrouter_llm()
+    llm = create_openrouter_llm(model_name="openai/gpt-4o")
 
     # 3. Compile LangGraph
     print("🕸️ Compiling ReAct State Machine with HITL governance...")
@@ -46,14 +46,19 @@ async def main(issue_description: str):
     state_input = {"messages": [HumanMessage(content=issue_description)]}
 
     try:
-        async for event in app.astream(state_input, config=config, stream_mode="values"):
-            messages = event.get("messages", [])
-            if messages:
-                last_message = messages[-1]
-                if last_message.type == "ai" and last_message.content:
-                    print(f"\n🤖 AI: {last_message.content}")
-                elif last_message.type == "tool":
-                    print(f"🛠️  Tool Execution '{last_message.name}' completed.")
+        # Run graph until completion or HITL
+        event = await app.ainvoke(state_input, config=config)
+        messages = event.get("messages", [])
+        if messages:
+            for msg in messages:
+                if msg.type == "ai":
+                    if msg.content:
+                        print(f"\n🤖 AI: {msg.content}")
+                    if hasattr(msg, "tool_calls") and msg.tool_calls:
+                        for call in msg.tool_calls:
+                            print(f"\n🤖 AI called tool: {call.get('name')}...")
+                elif msg.type == "tool":
+                    print(f"🛠️  Tool '{msg.name}' completed.")
                     
         # Check if we hit the interrupt
         state = app.get_state(config)
@@ -63,14 +68,16 @@ async def main(issue_description: str):
             user_input = input("Approve patch execution? (y/N): ")
             if user_input.lower().strip() == 'y':
                 print("✅ Approved. Resuming execution...")
-                async for event in app.astream(Command(resume=True), config=config, stream_mode="values"):
-                    pass
+                await app.ainvoke(Command(resume=True), config=config)
                 print("🎉 Task Complete!")
             else:
                 print("❌ Patch rejected by Human-in-the-Loop.")
         else:
             print("\n🎉 Task Complete!")
-
+    except Exception as e:
+        print(f"\n❌ Error during execution: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         await manager.close()
 
