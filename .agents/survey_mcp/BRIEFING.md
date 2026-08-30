@@ -1,4 +1,4 @@
-# BRIEFING — 2026-08-30T06:05:33Z
+# BRIEFING — 2026-08-30T06:08:00Z
 
 ## Mission
 Investigate and thoroughly document the FastMCP servers (mcp_ast_server, mcp_sandbox_server), their tools, schemas, execution mechanisms, tests, and dummy_code.py deliberate bug.
@@ -19,7 +19,7 @@ Investigate and thoroughly document the FastMCP servers (mcp_ast_server, mcp_san
 
 ## Current Parent
 - Conversation ID: d9925300-a151-4027-a050-5b14aa777f0d
-- Updated: 2026-08-30T06:05:33Z
+- Updated: 2026-08-30T06:08:00Z
 
 ## Task Summary
 - **What to build**: Comprehensive survey report of existing MCP servers in ARC repository.
@@ -28,7 +28,10 @@ Investigate and thoroughly document the FastMCP servers (mcp_ast_server, mcp_san
 - **Code layout**: /home/rhyme/repo/arc
 
 ## Key Decisions Made
-- Starting with inspecting ORIGINAL_REQUEST.md and listing directory trees of mcp_ast_server and mcp_sandbox_server.
+- Fully documented all 6 MCP tools across `arc-ast-server` and `arc-sandbox-server`.
+- Identified deliberate bug in `mcp_ast_server/tests/dummy_code.py` (`refund_payment` returns `False`).
+- Detailed the stdio and FastMCP execution flows for LangGraph Orchestrator consumption.
+- Generated `survey_report.md` and `handoff.md`.
 
 ## Artifact Index
 - /home/rhyme/repo/arc/.agents/survey_mcp/survey_report.md — Detailed MCP server survey and feature documentation.
